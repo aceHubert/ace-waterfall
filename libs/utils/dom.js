@@ -99,7 +99,7 @@ export function scrollIntoView(container, selected) {
 
 //鼠标的距离body的offsetX/offsetY
 /* istanbul ignore next */
-export function pointer(event)
+export function mouseOffset(event)
 { 
   if (isServer) return {left:0,top:0};
   return {
@@ -110,7 +110,7 @@ export function pointer(event)
 
 // 获取组件距离body的offsetX/offsetY
 /* istanbul ignore next */
-export function getOffset(el)
+export function elementOffset(el)
 {
   if (isServer) return {left:0,top:0};
   if(el.getBoundingClientRect){

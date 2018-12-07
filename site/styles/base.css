@@ -14,6 +14,10 @@
   margin-bottom:2px
 }
 
+*, *::before, *::after {
+  box-sizing: inherit;
+}
+
 body {
   margin: 0;
   padding: 0;
@@ -24,49 +28,12 @@ html,body, #root{
   height: 100%;
 }
 
+body {
+  margin: 0;
+}
+
 .app{
-  width:100%;
-  height: 100%;
-}
-
-.app-banner{
   width: 100%;
-  height: 100%;
-  box-sizing: border-box;
+  height: 100%
 }
 
-.banner-overflow{
- overflow: hidden;
-}
-
-.banner-overflow--auto{
-  overflow-y: auto;
-}
-
-
-.el-waterfall{
-  margin: auto;
-  width: 1120px;
-}
-
-.el-waterfall img{
-  width: 100%;
-}
-
-@media screen and (max-width: 1120px) {
-  .el-waterfall{
-    width: 900px;
-  }
-}
-
-@media screen and (max-width: 900px) {
-  .el-waterfall{
-    width: 760px;
-  }
-}
-
-@media screen and (max-width: 768px) {
-  .el-waterfall{
-    width: 100%;
-  }
-}

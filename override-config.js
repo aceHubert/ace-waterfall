@@ -5,7 +5,10 @@ const fs = require('fs');
 const appDirectory = fs.realpathSync(process.cwd());
 const resolveApp = relativePath => path.resolve(appDirectory, relativePath);
 
-module.exports = (config) => {
+module.exports = (config, env) => {
+  if(env==='test')
+    return config;
+    
   //移出ModuleScopePlugin插件的目录检测
   config.resolve.plugins.forEach((plugin,idx)=>{
     if(plugin.hasOwnProperty('appSrc') && plugin.hasOwnProperty('allowedFiles'))
@@ -18,10 +21,22 @@ module.exports = (config) => {
     {
       rule['include']= [ resolveApp('src'),resolveApp('site'),resolveApp('libs')]
     }else if(rule.hasOwnProperty('oneOf')){
-      rule.oneOf.forEach(one=>{
-        if(one.hasOwnProperty('include'))
+      rule.oneOf.forEach(oneOfRule=>{
+        if(oneOfRule.hasOwnProperty('include'))
         {
-          one['include']= [ resolveApp('src'),resolveApp('site'),resolveApp('libs')]
+          oneOfRule['include']= [ resolveApp('src'),resolveApp('site'),resolveApp('libs')]
+        }
+        if(oneOfRule.loader && oneOfRule.loader.includes('file-loader')){
+          oneOfRule.exclude.push(/\.md$/)
+        }
+      })
+       //添加md文件读取
+       rule.oneOf.push({
+        test: /\.md$/,
+        loader : require.resolve('raw-loader'),
+        include:  [ resolveApp('src'),resolveApp('site'),resolveApp('libs')],
+        options: {
+          name: 'static/media/[name].[hash:8].[ext]'
         }
       })
     }

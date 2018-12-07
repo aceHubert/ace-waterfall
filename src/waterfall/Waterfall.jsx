@@ -1,62 +1,72 @@
-// @flow
-
 import React from 'react'
-import { Component } from '../../libs'
+import { Component, PropTypes } from '../../libs'
+import { setStyle } from '../../libs/utils/dom'
 
-type Props ={
-  column: number,
-  columnWidth?: number,
-  gutter: number
-};
+class Waterfall extends Component {
+  constructor(props) {
+    super(props)
 
-class Waterfall extends Component<Props> {
-
-  static defaultProps ={
-    colunm: 4,
-    getter: 0
+    if(Array.isArray(props.gutter)){
+      this.gutter={
+        h: props.gutter[0],
+        v: props.gutter[1]
+      }
+    } else{
+      this.gutter={
+        h:props.gutter,
+        v:props.gutter
+      }
+    }
+    this.columns = props.columnWidth ? Math.floor(props.width/(props.columnWidth+this.gutter.h)):props.columns;
+    this.columnWidth=props.columnWidth ? props.columnWidth : Math.floor((props.width-this.gutter.h*(props.columns+1))/props.columns); 
   }
-
-  container: ?HTMLDivElement;
-
   componentDidMount(){
-    this.setPosition();
-    window.addEventListener('resize',this.resize);
+    this._setLayout()
   }
 
   componentDidUpdate(){
-    this.setPosition();
+      this._setLayout()    
   }
 
-  componentWillUnmount(){
-    window.removeEventListener('resize',this.resize);
-  }
+  resize = ()=> this._setLayout();
 
-  resize = ()=>this.setPosition()
-
-  setPosition=()=>{
-    let { column, columnWidth, gutter } = this.props;
-   
-    if(this.container)
-    {
-      let containerWidth = this.container.offsetWidth;   
-      let children = this.container.children; 
-      let newColumn = columnWidth ? Math.floor(containerWidth/(columnWidth+gutter)):column;
-      let newColumnWidth=columnWidth ? columnWidth : Math.floor((containerWidth-gutter*(column+1))/column); 
-      let columnHeights=Array.from({ length: newColumn }, () => gutter);
-
-      for(let i= 0;i< children.length;i++){
-        const child = children[i];
+  _setLayout =()=>{ 
+    let columnHeights=Array.from({ length: this.columns }, () => this.gutter.v);
+    this.childrenRefs.forEach((child)=>{
+      if(child && child.node)
+      {
         const minValue = Math.min(...columnHeights);
         const shortestColumnIndex = columnHeights.indexOf(minValue);
-        const left = ( newColumnWidth + gutter ) * shortestColumnIndex + gutter;
+        const left = ( this.columnWidth + this.gutter.h ) * shortestColumnIndex + this.gutter.h;        
         const top = columnHeights[shortestColumnIndex] ;        
-        columnHeights[shortestColumnIndex] +=child.offsetHeight + gutter;
-        child.style.position = 'absolute';
-        child.style.left = `${left}px`;
-        child.style.top = `${top}px`;
-        child.style.width = `${newColumnWidth}px`;
+        columnHeights[shortestColumnIndex] += child.node.offsetHeight + this.gutter.v;
+        let calculatedStyle = Object.assign({},this.props.useCSSTransforms?{
+          transform: `translate(${left}px, ${top}px)`,
+          transitionProperty: 'transform'
+        }:{
+          left: `${left}px`,
+          top: `${top}px`,
+          transitionProperty: 'left, top'
+        });
+        setStyle(child.node,calculatedStyle)
       }
-    }
+    })
+  }
+
+  _renderItemDom(){
+    this.childrenRefs= Array.from({length:this.props.children.length},()=> null);
+    return React.Children.map(this.props.children,(child,index)=>{   
+      return React.cloneElement(child, {
+        ref:(item)=> this.childrenRefs[index]= item,
+        style: Object.assign({}, child.props.style, {
+          width: `${this.columnWidth}px`,
+          position:'absolute',    
+          overflow: 'hidden',
+          touchAction: 'none',
+          transition: 'all 500ms ease'  
+        })
+      });
+    })
   }
 
   render() {
@@ -65,11 +75,26 @@ class Waterfall extends Component<Props> {
       position: 'relative'
     }
     return ( 
-      <div className={this.className(classname)} style={this.style(style)} ref={(el: ?HTMLDivElement)=>this.container = el}>
-        {this.props.children}
+      <div className={this.className(classname)} style={this.style(style)}>
+        {this._renderItemDom()}
       </div>
-    );
+    );   
   }
 }
 
-export default Waterfall;
+Waterfall.propTypes={
+  columns: PropTypes.positiveInteger,
+  columnWidth: PropTypes.positiveInteger,
+  gutter: PropTypes.oneOfType([PropTypes.positiveInteger,PropTypes.arrayOf(PropTypes.positiveInteger)]),
+  width: PropTypes.positiveInteger,
+  useCSSTransforms: PropTypes.bool
+}
+
+Waterfall.defaultProps ={
+  cols: 5,
+  getter: 10,
+  useCSSTransforms: true
+}
+
+
+export default Waterfall

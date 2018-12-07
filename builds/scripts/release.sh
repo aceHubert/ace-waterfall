@@ -6,8 +6,8 @@ VERSION=$(cat package.json | grep version | head -1 | awk -F: '{ print $2 }' | s
 
 # target folder: /dist/site, make it clean and step into
 rm -fr dist
-mkdir dist dist/site
-cd dist/site
+mkdir dist dist/gh-pages
+cd dist/gh-pages
 
 # init an empty git repo, checkout branch gh-pages
 git init
@@ -15,9 +15,12 @@ git remote add origin $ORIGIN
 git fetch
 git checkout -t origin/gh-pages
 
-# remove all existed files in the repo, run the site build script
-rm *
+# run the site build script
+rm -r *
 yarn run build
+
+# copy site to gh-pages folder
+cp -r ../site/* .
 
 # commit and push to gh-pages
  git add . -A
